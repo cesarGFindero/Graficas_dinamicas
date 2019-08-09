@@ -36,9 +36,7 @@ class Ventana(tk.Tk):
     def mainWidgets(self):
         self.cuerpo = Cuerpo(self)
         self.cuerpo.grid(row=0, column=0)
-        
-#        self.titulo = Titulo(self)
-#        self.titulo.grid(row=2, column=1)
+
      
     def cerrar(self):
         self.destroy()
@@ -70,13 +68,12 @@ class Cuerpo(tk.Frame):
         self.label_mes.grid(row=3, column=1, padx=20, pady=20, sticky=tk.E)
 
         self.tk_mes = tk.StringVar()
-        self.tk_mes.set(self.meses_lista[datetime.now().month])        
-        self.meses = {m for m in os.listdir(self.carpeta_in) if m in self.meses_lista.values()}
+        self.meses = [m for m in os.listdir(self.carpeta_in) if m in self.meses_lista.values()]
+        self.tk_mes.set(self.meses[-1])
         
         self.mes_desplegable = tk.OptionMenu(self, self.tk_mes, *self.meses)
         self.mes_desplegable.config(width=20)
         self.mes_desplegable.grid(row=3,column=2)
-        
         
         
         self.label_cliente = tk.Label(self, text = 'Cliente:')
@@ -107,14 +104,10 @@ class Cuerpo(tk.Frame):
         self.findero_desplegable.grid(row=5,column=2)
         
 
-
-        self.ventanas = -1
         self.boton_enviar = tk.Button(self, text = 'Siguiente', command=self.enviar)
         self.boton_enviar.grid(row=7, column=1, columnspan = 2, ipadx=15)
         
         
-        
-                      
         self.grid_rowconfigure(0, minsize=20)
         self.grid_rowconfigure(2, minsize=20)
         self.grid_rowconfigure(6, minsize=20)
@@ -128,26 +121,18 @@ class Cuerpo(tk.Frame):
         
         self.frecuencia = 5
         
-#        start = time.time()
         self.leer_datos()
-#        print(self.df.shape[0])
-#        end = time.time()
-#        print(end - start)
-      
-        
-        self.ventanas+=1
-        desp = 0#50*self.ventanas
+
         
         top = tk.Toplevel()
         top.iconbitmap('favicon.ico')
-        top.geometry(f'+{1050+desp}+{200+desp}')
+        top.geometry(f'+{1050}+{200}')
         
         
         label = tk.Label(top, text=self.tk_findero.get(),font='Helvetica 12 bold') 
         label.grid(row=1,column=1, columnspan=3, sticky=tk.W)
         
-        self.data_frame = pd.DataFrame()
-        self.tamano = 0
+
         self.puertos = ['Puerto '+ str(i) for i in range(1,13)]
         self.selecciones = dict()  
         
@@ -225,8 +210,8 @@ class Cuerpo(tk.Frame):
 
     def leer_datos(self):
              
-        carpeta = 'D:/01 Findero/' + self.tk_mes.get() + '/' + self.tk_cliente.get() + '/Datos'
-        filename = carpeta + '/' + 'DATALOG_'+self.tk_findero.get()+'.CSV'   
+        carpeta = f'D:/01 Findero/{self.tk_mes.get()}/{self.tk_cliente.get()}/Datos'
+        filename = f'{carpeta}/DATALOG_{self.tk_findero.get()}.CSV'   
         
         with open(filename) as f:
             for i, l in enumerate(f):
@@ -238,23 +223,20 @@ class Cuerpo(tk.Frame):
         self.df = pd.read_csv(filename, skiprows=saltar)
     
         try:
-            self.df['datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d/%m/%Y  %H:%M:%S')
+            self.df['Datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d/%m/%Y  %H:%M:%S')
         except ValueError:
         
             try:
-                self.df['datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d-%m-%Y  %H:%M:%S')
+                self.df['Datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d-%m-%Y  %H:%M:%S')
             except ValueError:
-                self.df['datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d-%m-%y  %H:%M:%S')  
+                self.df['Datetime'] = pd.to_datetime(self.df['Date']+' '+self.df['Time'], format='%d-%m-%y  %H:%M:%S')  
     
     
     def graficador(self):
-        
-#        start = time.time()
+
         gr.graficas_dinamicas(self.tk_cliente.get(), self.tk_mes.get(), 
-                            'DATALOG_'+self.tk_findero.get()+'.CSV', self.seleccion_grafica, self.frecuencia, self.df)
-#        end = time.time()
-#        print(end - start)
-        
+                            f'DATALOG_{self.tk_findero.get()}.CSV', self.seleccion_grafica, self.frecuencia, self.df)
+
         
         for puerto in self.puertos:
             self.selecciones[puerto].var.set(False)      

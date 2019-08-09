@@ -6,36 +6,24 @@ import pdb
 import plotly as py
 import plotly.graph_objs as go
 import pandas as pd
-from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
-import numpy as np
 import os
-import time
+import time  
 
-def leer_y_preparar(filename):
-    df = pd.read_csv(filename)
-    
-    try:
-        df['datetime'] = pd.to_datetime(df['Date']+df['Time'], format='%d/%m/%Y  %H:%M:%S')
-    except ValueError:
-    
-        try:
-            df['datetime'] = pd.to_datetime(df['Date']+df['Time'], format='%d-%m-%Y  %H:%M:%S')
-        except ValueError:
-            df['datetime'] = pd.to_datetime(df['Date']+df['Time'], format='%d-%m-%y  %H:%M:%S')     
-    return df
     
 def graficas_dinamicas(cliente,mes,findero,senales,frecuencia_graficacion,df):
     
-    carpeta = 'D:/01 Findero/' + mes + '/' + cliente + '/Datos'    
-    filename = carpeta + '/' + findero    
+    carpeta_out = f'D:/01 Findero/{mes}/{cliente}/Graficas'   
+    
+    if not os.path.exists(carpeta_out):
+        os.mkdir(carpeta_out)
     
     for column in senales:
         
-        columna = 'L'+str(column)
-        puerto = 'Puerto ' + str(column)
+        columna = f'L{column}'
+        puerto = f'Puerto {column}' 
         y_data = df[columna].values
         
-        x_data = df['datetime']-pd.Timedelta('0 days 0:00:00')
+        x_data = df['Datetime']-pd.Timedelta('0 days 0:00:00')
         
         layout = go.Layout(
                 title = puerto +'  '+ findero[8:-4],
@@ -43,7 +31,7 @@ def graficas_dinamicas(cliente,mes,findero,senales,frecuencia_graficacion,df):
                         title = 'Potencia'
                         ),
                 xaxis = dict(
-                        title = 'Índice'
+                        title = 'Fecha y hora'
                         )
                 )
                 
@@ -58,7 +46,8 @@ def graficas_dinamicas(cliente,mes,findero,senales,frecuencia_graficacion,df):
                                 )
                         )
         fig = go.Figure(data = [trace1] ,layout=layout)
-        plot(fig)
+        py.offline.plot(fig, filename=f'{carpeta_out}/{puerto}.html')
+        
         
         time.sleep(.3)
 
